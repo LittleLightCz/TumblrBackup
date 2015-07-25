@@ -61,7 +61,7 @@ posts_count = len(posts)
 #Start downloading
 with concurrent.futures.ThreadPoolExecutor(max_workers=connections) as executor:
     for post,num in zip(posts,range(posts_count)):
-            executor.submit(namespace, download_worker, directory, post, num, posts_count)
+            executor.submit(download_worker, namespace, directory, post, num, posts_count)
 
 
 
