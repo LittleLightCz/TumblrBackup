@@ -1,9 +1,8 @@
 import urllib.request
 import xml.etree.ElementTree as ET
-import tumblr_downloader as tumblr
+import downloader as tumblr
 import concurrent.futures
-import re
-import os
+import re, os
 
 __author__ = 'LittleLight'
 
