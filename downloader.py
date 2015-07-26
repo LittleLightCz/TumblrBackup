@@ -6,8 +6,10 @@ import re
 
 __author__ = 'LittleLight'
 
+
 def _parse(m):
     return u.quote(m.group(0))
+
 
 def download(targetDir, url, date):
     url = re.sub(r"[^/]+$",_parse,url)
@@ -19,6 +21,7 @@ def download(targetDir, url, date):
 
         _process(soup, targetDir)
 
+
 def _downloadImage(img, targetDir):
     url = img["src"]
     filename = re.match(r".*/([^/]+)$",url).group(1)
@@ -28,11 +31,11 @@ def _downloadImage(img, targetDir):
 
     img["src"] = filename
 
+
 def _getVideoExtension(type):
     return "."+re.match(r".*/([^/]+)$", type).group(1)
 
 def _processVideo(soup, targetDir):
-    videos = soup.findAll("video")
     for video in soup.findAll("video"):
         source = video.find("source")
 
@@ -45,12 +48,15 @@ def _processVideo(soup, targetDir):
 
         source["src"] = filename
 
+
 def _downloadVideos(soup, targetDir):
     _downloadIframes(soup, targetDir, _processVideo, "tumblr_video_iframe")
+
 
 def _downloadImages(post, targetDir):
     for img in post.findAll("img"):
         _downloadImage(img, targetDir)
+
 
 def _processPhotoset(soup, targetDir):
     links = soup.findAll("a",{"class":"photoset_photo"})
@@ -62,8 +68,10 @@ def _processPhotoset(soup, targetDir):
         link["href"] = img["src"]
 
 
+
 def _downloadPhotoset(post, targetDir):
     _downloadIframes(post, targetDir, _processPhotoset, "photoset")
+
 
 def _downloadIframes(post, targetDir, process, className = None):
 
@@ -83,11 +91,18 @@ def _downloadIframes(post, targetDir, process, className = None):
             with open(os.path.join(targetDir,frame_name),"w", encoding="utf-8") as f:
                 f.write(soup.prettify())
 
-        frame["src"] = frame_name
+        if className == "tumblr_video_iframe":
+            _,post_dir = os.path.split(targetDir)
+            frame["src"] = os.path.join(post_dir, frame_name)
+        else:
+            frame["src"] = frame_name
+
+
 
 def _downloadMedia(post, targetDir):
     _downloadImages(post, targetDir)
     _downloadPhotoset(post, targetDir)
+
 
 def _process(soup, targetDir):
     post = soup.find("section", {"class":"post"})
@@ -100,10 +115,5 @@ def _process(soup, targetDir):
     _downloadVideos(soup, targetDir)
 
     with open(os.path.join(targetDir,"post.html"), "w", encoding="utf-8") as f:
-        f.write('<html>')
-        f.write('<head>')
-        f.write('<meta http-equiv="Content-Type" content="text/html;charset=UTF-8">')
-        f.write('</head>')
         f.write(post.prettify())
-        f.write('</html>')
 

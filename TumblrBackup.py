@@ -2,7 +2,7 @@ import urllib.request
 import xml.etree.ElementTree as ET
 import downloader as tumblr
 import concurrent.futures
-import re, os
+import re, os, indexer
 
 __author__ = 'LittleLight'
 
@@ -33,7 +33,6 @@ Main script run
 print("Enter your blog name:")
 blog = input()
 
-
 directory = blog+"_backup"
 
 print("Creating directory: "+directory+" ...")
@@ -63,15 +62,8 @@ with concurrent.futures.ThreadPoolExecutor(max_workers=connections) as executor:
             executor.submit(download_worker, namespace, directory, post, num, posts_count)
 
 
-
 #Create index
-with open(os.path.join(directory,"index.html"),"w", encoding="utf-8") as f:
-    for root, dirs, files in os.walk(directory):
-        for file in files:
-            if file == "post.html":
-                _,file_path = os.path.split(root)
-                file_path = os.path.join(file_path,file)
-                f.write('<iframe style="width: 90%; height: 1000px;" src="{0}">'.format(file_path))
-                f.write('</iframe><br>\n')
+print("Building index.hml ...")
+indexer.build(directory, blog)
 
 print("Backup completed!")
