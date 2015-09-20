@@ -10,15 +10,21 @@ __author__ = 'LittleLight'
 Functions
 '''
 def download_worker(namespace, directory, post, num, posts_count):
-   post_num = num+1
+    post_num = num+1
 
-   print("Processing post {0} of {1} ...".format(post_num, posts_count))
+    print("Processing post {0} of {1} ...".format(post_num, posts_count))
 
-   post_url = post.find(".//"+namespace+"loc").text.strip()
-   post_date = post.find(".//"+namespace+"lastmod").text.strip()
-   post_date = post_date.replace("T","_").replace("Z","")
+    post_url = post.find(".//"+namespace+"loc").text.strip()
+    post_date = post.find(".//"+namespace+"lastmod").text.strip()
+    post_date = post_date.replace("T","_").replace("Z","")
 
-   tumblr.download(os.path.join(directory,"post{0}".format(post_num)),post_url,post_date)
+    postdir = re.match(r".+/(\d+/.+)$",post_url).group(1).replace("/","_")
+    targetdir = os.path.join(directory,postdir)
+
+    if not os.path.exists(targetdir):
+        tumblr.download(targetdir,post_url,post_date)
+    else:
+        print("%s exists, skipping ..." % targetdir)
 
 '''
 Configuration
@@ -51,7 +57,7 @@ with urllib.request.urlopen(sitemap_url) as response:
    sitemap_xml = response.read().decode("utf-8")
 
 posts = ET.fromstring(sitemap_xml)
-namespace = re.match(u"({.*})\w+$", posts.tag).group(1)
+namespace = re.match(r"({.*})\w+$", posts.tag).group(1)
 
 posts_count = len(posts)
 
@@ -59,6 +65,9 @@ posts_count = len(posts)
 #Start downloading
 with concurrent.futures.ThreadPoolExecutor(max_workers=connections) as executor:
     for post,num in zip(posts,range(posts_count)):
+        #redundant check
+        post_url = post.find(".//"+namespace+"loc").text.strip()
+        if post_url != url:
             executor.submit(download_worker, namespace, directory, post, num, posts_count)
 
 
